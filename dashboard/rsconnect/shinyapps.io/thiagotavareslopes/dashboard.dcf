@@ -5,6 +5,6 @@ account: thiagotavareslopes
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 14031745
-bundleId: 9819525
+bundleId: 9819565
 url: https://thiagotavareslopes.shinyapps.io/dashboard/
 version: 1
