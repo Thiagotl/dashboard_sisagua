@@ -20,7 +20,7 @@ dados <- criar_num_empresa(dados)
 # UI
 ui <- fluidPage(
   theme = shinytheme("cerulean"),
-  titlePanel("Dashboard CNAE"),
+  titlePanel("Dashboard CNAE - Parâmetro Acrilamida"),
   sidebarLayout(
     sidebarPanel(
       selectInput("cnae_var", "Escolha um CNAE:", 
@@ -40,7 +40,7 @@ server <- function(input, output) {
     if (!is.null(cnae_col)) {
       tabela <- prop.table(table(dados[[paste0("num_empresa_", cnae_col)]], dados$deteccao), 1)
       colnames(tabela) <- c("sem empresas no CNAE", "com empresas no CNAE")
-      rownames(tabela) <- c("com detecção", "sem detecção")
+      rownames(tabela) <- c("com detecção", "sem detecção") # arrumar aqui
       as.data.frame.matrix(tabela)
     }
   }, rownames = TRUE)

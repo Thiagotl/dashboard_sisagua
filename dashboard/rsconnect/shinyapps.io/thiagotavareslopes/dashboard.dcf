@@ -1,10 +1,12 @@
 name: dashboard
-title:
+title: dashboard
 username: thiagotavareslopes
 account: thiagotavareslopes
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 14031745
-bundleId: 9819565
+bundleId: 9819687
 url: https://thiagotavareslopes.shinyapps.io/dashboard/
 version: 1
+asMultiple: FALSE
+asStatic: FALSE
