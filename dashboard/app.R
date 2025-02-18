@@ -1,5 +1,7 @@
 library(shiny)
+library(shinythemes)
 library(dplyr)
+
 # Carregar os dados corretamente
 dados <- read.csv("planilha_acrilamida.csv", sep=";", stringsAsFactors = FALSE)
 
@@ -17,6 +19,7 @@ dados <- criar_num_empresa(dados)
 
 # UI
 ui <- fluidPage(
+  theme = shinytheme("cerulean"),
   titlePanel("Dashboard CNAE"),
   sidebarLayout(
     sidebarPanel(
@@ -36,6 +39,8 @@ server <- function(input, output) {
     cnae_col <- input$cnae_var
     if (!is.null(cnae_col)) {
       tabela <- prop.table(table(dados[[paste0("num_empresa_", cnae_col)]], dados$deteccao), 1)
+      colnames(tabela) <- c("sem empresas no CNAE", "com empresas no CNAE")
+      rownames(tabela) <- c("com detecção", "sem detecção")
       as.data.frame.matrix(tabela)
     }
   }, rownames = TRUE)
@@ -44,10 +49,24 @@ server <- function(input, output) {
     cnae_col <- input$cnae_var
     if (!is.null(cnae_col)) {
       tabela <- table(dados[[paste0("num_empresa_", cnae_col)]], dados$deteccao)
-      chisq.test(tabela)
+      dimnames(tabela) <- list(
+        "CNAE" = c("com detecção", "sem detecção"),
+        "Detecção" = c("sem empresas no CNAE", "com empresas no CNAE")
+      )
+      resultado <- chisq.test(tabela)
+      
+      if (resultado$p.value < 0.05) {
+        cat("Pelo teste qui-quadrado de independência, com nível de significância de 5%,\n",
+        "há presença de associação entre as variáveis. \n")
+      } else {
+        cat("Pelo teste qui-quadrado de independência, com nível de significância de 5%, \n",
+        "não há presença de associação entre as variáveis.\n")
+      }
     }
   })
 }
 
 # Rodar app
 shinyApp(ui = ui, server = server)
+
+# rsconnect::deployApp("/home/thiago/Documentos/dashboard_sisagua/dashboard", appFiles = c("app.R", "planilha_acrilamida.csv"))
