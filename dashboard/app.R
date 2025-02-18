@@ -1,5 +1,5 @@
 library(shiny)
-
+library(dplyr)
 # Carregar os dados corretamente
 dados <- read.csv("planilha_acrilamida.csv", sep=";", stringsAsFactors = FALSE)
 
