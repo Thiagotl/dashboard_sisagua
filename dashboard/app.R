@@ -4,6 +4,7 @@ library(dplyr)
 
 # Carregar os dados corretamente
 dados <- read.csv("planilha_acrilamida.csv", sep=";", stringsAsFactors = FALSE)
+descricoes <- read.csv("descri.csv", sep=";", stringsAsFactors = FALSE)
 
 # Função para generalizar a criação de num_empresa
 criar_num_empresa <- function(df) {
@@ -24,7 +25,10 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       selectInput("cnae_var", "Escolha um CNAE:", 
-                  choices = names(dados)[grepl("^cnae_", names(dados))])
+                  choices = names(dados)[grepl("^cnae_", names(dados))]),
+      br(),
+      textOutput("descricao_geral"),
+      textOutput("descricao_especifica")
     ),
     mainPanel(
       tableOutput("tabela_freq"),
@@ -46,6 +50,18 @@ server <- function(input, output) {
       tabela_final
     }
   }, rownames = TRUE)
+  
+  output$descricao_geral <- renderText({
+    cnae_col <- input$cnae_var
+    descricao <- descricoes[descricoes$CNAE == cnae_col, "Denominação Geral"]
+    ifelse(length(descricao) > 0, paste("Descrição Geral: ", descricao), "Descrição não encontrada")
+  })
+  
+  output$descricao_especifica <- renderText({
+    cnae_col <- input$cnae_var
+    descricao <- descricoes[descricoes$CNAE == cnae_col, "Denominação Específica"]
+    ifelse(length(descricao) > 0, paste("Descrição Específica: ", descricao), "Descrição não encontrada")
+  })
   
   output$chi_square <- renderPrint({
     cnae_col <- input$cnae_var
@@ -72,4 +88,4 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
 
 #
-rsconnect::deployApp("/home/thiago/Documentos/dashboard_sisagua/dashboard", appFiles = c("app.R", "planilha_acrilamida.csv"))
+#rsconnect::deployApp("/home/thiago/Documentos/dashboard_sisagua/dashboard", appFiles = c("app.R", "planilha_acrilamida.csv"))
