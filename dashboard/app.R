@@ -27,7 +27,7 @@ ui <- fluidPage(
                   choices = names(dados)[grepl("^cnae_", names(dados))])
     ),
     mainPanel(
-      tableOutput("tabela_prop"),
+      tableOutput("tabela_freq"),
       verbatimTextOutput("chi_square")
     )
   )
@@ -35,32 +35,34 @@ ui <- fluidPage(
 
 # Server
 server <- function(input, output) {
-  output$tabela_prop <- renderTable({
+  output$tabela_freq <- renderTable({
     cnae_col <- input$cnae_var
     if (!is.null(cnae_col)) {
-      tabela <- prop.table(table(dados[[paste0("num_empresa_", cnae_col)]], dados$deteccao), 1)
-      colnames(tabela) <- c("sem empresas no CNAE", "com empresas no CNAE")
-      rownames(tabela) <- c("com detecção", "sem detecção") # arrumar aqui
-      as.data.frame.matrix(tabela)
+      tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
+      proporcoes <- prop.table(tabela, margin = 1)
+      tabela_final <- cbind(as.data.frame.matrix(tabela), Proporção = round(proporcoes[, 2], 2))
+      colnames(tabela_final) <- c("com detecção", "sem detecção", "Proporção")
+      rownames(tabela_final) <- c("sem empresas no CNAE", "com empresas no CNAE")
+      tabela_final
     }
   }, rownames = TRUE)
   
   output$chi_square <- renderPrint({
     cnae_col <- input$cnae_var
     if (!is.null(cnae_col)) {
-      tabela <- table(dados[[paste0("num_empresa_", cnae_col)]], dados$deteccao)
+      tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
       dimnames(tabela) <- list(
-        "CNAE" = c("com detecção", "sem detecção"),
-        "Detecção" = c("sem empresas no CNAE", "com empresas no CNAE")
+        "CNAE" = c("sem empresas no CNAE", "com empresas no CNAE"),
+        "Detecção" = c("com detecção", "sem detecção")
       )
       resultado <- chisq.test(tabela)
       
       if (resultado$p.value < 0.05) {
         cat("Pelo teste qui-quadrado de independência, com nível de significância de 5%,\n",
-        "há presença de associação entre as variáveis. \n")
+            "há presença de associação entre as variáveis. \n")
       } else {
         cat("Pelo teste qui-quadrado de independência, com nível de significância de 5%, \n",
-        "não há presença de associação entre as variáveis.\n")
+            "não há presença de associação entre as variáveis.\n")
       }
     }
   })
@@ -69,4 +71,5 @@ server <- function(input, output) {
 # Rodar app
 shinyApp(ui = ui, server = server)
 
-# rsconnect::deployApp("/home/thiago/Documentos/dashboard_sisagua/dashboard", appFiles = c("app.R", "planilha_acrilamida.csv"))
+#
+rsconnect::deployApp("/home/thiago/Documentos/dashboard_sisagua/dashboard", appFiles = c("app.R", "planilha_acrilamida.csv"))
