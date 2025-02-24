@@ -4,7 +4,12 @@ library(dplyr)
 
 # Carregar os dados corretamente
 dados <- read.csv("planilha_acrilamida.csv", sep=";", stringsAsFactors = FALSE)
-descricoes <- read.csv("descri.csv", sep=";", stringsAsFactors = FALSE)
+descricoes <- read.csv("descri.csv", sep=",", stringsAsFactors = FALSE)
+
+# Ajustar nomes das colunas e converter para string corretamente
+colnames(descricoes) <- tolower(trimws(colnames(descricoes)))
+descricoes <- descricoes %>% mutate(cnae = trimws(as.character(descricoes$cnae)))
+
 
 # Função para generalizar a criação de num_empresa
 criar_num_empresa <- function(df) {
@@ -25,7 +30,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       selectInput("cnae_var", "Escolha um CNAE:", 
-                  choices = names(dados)[grepl("^cnae_", names(dados))]),
+                  choices = names(dados)[grepl("^cnae_", names(dados))], selected = names(dados)[grepl("^cnae_", names(dados))][1]),
       br(),
       textOutput("descricao_geral"),
       textOutput("descricao_especifica")
@@ -41,7 +46,7 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$tabela_freq <- renderTable({
     cnae_col <- input$cnae_var
-    if (!is.null(cnae_col)) {
+    if (!is.null(cnae_col) && cnae_col %in% names(dados)) {
       tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
       proporcoes <- prop.table(tabela, margin = 1)
       tabela_final <- cbind(as.data.frame.matrix(tabela), Proporção = round(proporcoes[, 2], 2))
@@ -52,20 +57,28 @@ server <- function(input, output) {
   }, rownames = TRUE)
   
   output$descricao_geral <- renderText({
-    cnae_col <- input$cnae_var
-    descricao <- descricoes[descricoes$CNAE == cnae_col, "Denominação Geral"]
-    ifelse(length(descricao) > 0, paste("Descrição Geral: ", descricao), "Descrição não encontrada")
+    cnae_col <- as.character(input$cnae_var)
+    descricao <- descricoes %>% filter(trimws(cnae) == trimws(cnae_col)) %>% pull(denominacao_geral)
+    if (length(descricao) > 0 && !is.na(descricao[1])) {
+      paste("Descrição Geral: ", descricao[1])
+    } else {
+      "Descrição não encontrada"
+    }
   })
   
   output$descricao_especifica <- renderText({
-    cnae_col <- input$cnae_var
-    descricao <- descricoes[descricoes$CNAE == cnae_col, "Denominação Específica"]
-    ifelse(length(descricao) > 0, paste("Descrição Específica: ", descricao), "Descrição não encontrada")
+    cnae_col <- as.character(input$cnae_var)
+    descricao <- descricoes %>% filter(trimws(cnae) == trimws(cnae_col)) %>% pull(denominacao_especifica)
+    if (length(descricao) > 0 && !is.na(descricao[1])) {
+      paste("Descrição Específica: ", descricao[1])
+    } else {
+      "Descrição não encontrada"
+    }
   })
   
   output$chi_square <- renderPrint({
     cnae_col <- input$cnae_var
-    if (!is.null(cnae_col)) {
+    if (!is.null(cnae_col) && cnae_col %in% names(dados)) {
       tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
       dimnames(tabela) <- list(
         "CNAE" = c("sem empresas no CNAE", "com empresas no CNAE"),
@@ -86,6 +99,8 @@ server <- function(input, output) {
 
 # Rodar app
 shinyApp(ui = ui, server = server)
+
+
 
 #
 #rsconnect::deployApp("/home/thiago/Documentos/dashboard_sisagua/dashboard", appFiles = c("app.R", "planilha_acrilamida.csv"))
