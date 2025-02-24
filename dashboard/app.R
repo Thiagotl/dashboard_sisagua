@@ -102,5 +102,4 @@ shinyApp(ui = ui, server = server)
 
 
 
-#
-#rsconnect::deployApp("/home/thiago/Documentos/dashboard_sisagua/dashboard", appFiles = c("app.R", "planilha_acrilamida.csv"))
+#rsconnect::deployApp("/home/thiago/Documentos/dashboard_sisagua/dashboard", appFiles = c("app.R", "planilha_acrilamida.csv","descri.csv"))
