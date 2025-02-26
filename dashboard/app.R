@@ -88,7 +88,8 @@ server <- function(input, output) {
       
       if (resultado$p.value < 0.05) {
         cat("Pelo teste qui-quadrado de independência, com nível de significância de 5%,\n",
-            "há presença de associação entre as variáveis. \n")
+            "pode-se concluir que existe associação entre a presença de acrimilada na água e, \n", 
+            "a existência de empresas com o CNAE selecionado. \n")
       } else {
         cat("Pelo teste qui-quadrado de independência, com nível de significância de 5%, \n",
             "não há presença de associação entre as variáveis.\n")
