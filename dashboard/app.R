@@ -50,7 +50,7 @@ server <- function(input, output) {
       tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
       proporcoes <- prop.table(tabela, margin = 1)
       tabela_final <- cbind(as.data.frame.matrix(tabela), Proporção = round(proporcoes[, 2], 2))
-      colnames(tabela_final) <- c("com detecção", "sem detecção", "Proporção")
+      colnames(tabela_final) <- c("com detecção", "sem detecção", "Proporção") # arrumar aqui, possívelmente errado a posicao dos nomes
       rownames(tabela_final) <- c("sem empresas no CNAE", "com empresas no CNAE")
       tabela_final
     }
