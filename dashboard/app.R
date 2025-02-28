@@ -253,7 +253,7 @@ server <- function(input, output) {
           "Município:", municipio,
           "<br>Código IBGE:", codigo_ibge,
           "<br>UF:", uf,
-          "<br>Empresas com CNAEs:", num_cnaes,
+          "<br>Qt.de Empresas neste CNAE:", num_cnaes,
           "<br>Total Detectados:", Total_Detectados
         ),
         hoverinfo = "text",
