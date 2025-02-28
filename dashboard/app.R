@@ -51,7 +51,9 @@ ui <- fluidPage(
       ),
       br(),
       textOutput("descricao_geral"),
-      textOutput("descricao_especifica")
+      textOutput("descricao_especifica"),
+      hr(),
+      htmlOutput("info_fixa")
     ),
     
     mainPanel(
@@ -71,7 +73,20 @@ ui <- fluidPage(
 
 # 3) SERVER -------------------------------------------------------------------
 server <- function(input, output) {
-  
+  # 3.0) Informações fixas
+  output$info_fixa <- renderUI({
+    n_municipios <- length(unique(dados$municipio))
+    n_consistentes <- sum(dados$consistente == 1, na.rm = TRUE)
+    n_inconsistentes <- sum(dados$consistente == 0, na.rm = TRUE)
+    
+    HTML(
+      paste0(
+        "<strong>Qt de municípios testados:</strong> ", n_municipios, "<br>",
+        "<strong>Qt de mun com testes consistentes:</strong> ", n_consistentes, "<br>",
+        "<strong>Qt de mun com testes inconsistentes:</strong> ", n_inconsistentes
+      )
+    )
+  })
   # 3.1) Descrições (geral e específica) a partir de 'descricoes'
   output$descricao_geral <- renderText({
     cnae_col <- as.character(input$cnae_var)
@@ -125,7 +140,7 @@ server <- function(input, output) {
       if (resultado$p.value < 0.05) {
         HTML(
           paste0(
-            "Pelo teste qui-quadrado de independência (Tabela Completa), ",
+            "Pelo teste qui-quadrado de independência, ",
             "com nível de significância de 5%,<br>",
             "pode-se concluir que <strong>existe associação</strong> ",
             "entre a presença de acrilamida na água e ",
@@ -135,7 +150,7 @@ server <- function(input, output) {
       } else {
         HTML(
           paste0(
-            "Pelo teste qui-quadrado de independência (Tabela Completa), ",
+            "Pelo teste qui-quadrado de independência, ",
             "com nível de significância de 5%,<br>",
             "pode-se concluir que <strong>não existe associação</strong> ",
             "entre a presença de acrilamida na água e ",
@@ -177,7 +192,7 @@ server <- function(input, output) {
       if (resultado$p.value < 0.05) {
         HTML(
           paste0(
-            "Pelo teste qui-quadrado de independência (Tabela Completa), ",
+            "Pelo teste qui-quadrado de independência, ",
             "com nível de significância de 5%,<br>",
             "pode-se concluir que <strong>existe associação</strong> ",
             "entre a presença de acrilamida na água e ",
@@ -187,7 +202,7 @@ server <- function(input, output) {
       } else {
         HTML(
           paste0(
-            "Pelo teste qui-quadrado de independência (Tabela Completa), ",
+            "Pelo teste qui-quadrado de independência, ",
             "com nível de significância de 5%,<br>",
             "pode-se concluir que <strong>não existe associação</strong> ",
             "entre a presença de acrilamida na água e ",
