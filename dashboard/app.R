@@ -1,27 +1,23 @@
 library(shiny)
 library(shinythemes)
-library(dplyr)
+library(tidyverse)
 
 # Carregar os dados corretamente
-dados <- read.csv("planilha_acrilamida.csv", sep=";", stringsAsFactors = FALSE)
+dados <- read.csv("planilha_acrilamida.csv", sep=",", stringsAsFactors = FALSE)
 descricoes <- read.csv("descri.csv", sep=",", stringsAsFactors = FALSE)
 
 # Ajustar nomes das colunas e converter para string corretamente
 colnames(descricoes) <- tolower(trimws(colnames(descricoes)))
 descricoes <- descricoes %>% mutate(cnae = trimws(as.character(descricoes$cnae)))
 
+# Ajustar nomes das colunas e converter valores
+colnames(dados) <- trimws(colnames(dados))  # Remove espaços extras
+dados$Total_Detectados <- as.numeric(dados$Total_Detectados)
 
 # Função para generalizar a criação de num_empresa
-criar_num_empresa <- function(df) {
-  cnae_cols <- names(df)[grepl("^cnae_", names(df))]
-  df <- df |> 
-    mutate(across(all_of(cnae_cols), ~ ifelse(. > 0, 1, 0), .names = "num_empresa_{.col}")) |> 
-    mutate(deteccao = ifelse(Total_Detectados > 0, 1, 0))
-  return(df)
-}
-
-# Aplicar a função aos dados
-dados <- criar_num_empresa(dados)
+dados <- dados |> 
+  mutate(across(starts_with("cnae_"), ~ ifelse(. > 0, 1, 0), .names = "num_empresa_{.col}")) |> 
+  mutate(deteccao = ifelse(Total_Detectados > 0, 1, 0))
 
 # UI
 ui <- fluidPage(
@@ -36,6 +32,7 @@ ui <- fluidPage(
       textOutput("descricao_especifica")
     ),
     mainPanel(
+      h3("Tabela Completa"),
       tableOutput("tabela_freq"),
       verbatimTextOutput("chi_square")
     )
@@ -50,7 +47,7 @@ server <- function(input, output) {
       tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
       proporcoes <- prop.table(tabela, margin = 1)
       tabela_final <- cbind(as.data.frame.matrix(tabela), Proporção = round(proporcoes[, 2], 2))
-      colnames(tabela_final) <- c("com detecção", "sem detecção", "Proporção") # arrumar aqui, possívelmente errado a posicao dos nomes
+      colnames(tabela_final) <- c("sem detecção", "com detecção", "Proporção")
       rownames(tabela_final) <- c("sem empresas no CNAE", "com empresas no CNAE")
       tabela_final
     }
@@ -82,17 +79,18 @@ server <- function(input, output) {
       tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
       dimnames(tabela) <- list(
         "CNAE" = c("sem empresas no CNAE", "com empresas no CNAE"),
-        "Detecção" = c("com detecção", "sem detecção")
+        "Detecção" = c("sem detecção", "com detecção")
       )
       resultado <- chisq.test(tabela)
       
       if (resultado$p.value < 0.05) {
         cat("Pelo teste qui-quadrado de independência, com nível de significância de 5%,\n",
-            "pode-se concluir que existe associação entre a presença de acrimilada na água e, \n", 
+            "pode-se concluir que **existe associação** entre a presença de acrilamida na água e, \n", 
             "a existência de empresas com o CNAE selecionado. \n")
       } else {
         cat("Pelo teste qui-quadrado de independência, com nível de significância de 5%, \n",
-            "não há presença de associação entre as variáveis.\n")
+            "pode-se concluir que **não existe associação** entre a presença de acrilamida na água e,\n",
+            "a existência de empresas com o CNAE selecionado.\n")
       }
     }
   })
@@ -100,7 +98,3 @@ server <- function(input, output) {
 
 # Rodar app
 shinyApp(ui = ui, server = server)
-
-
-
-#rsconnect::deployApp("/home/thiago/Documentos/dashboard_sisagua/dashboard", appFiles = c("app.R", "planilha_acrilamida.csv","descri.csv"))
