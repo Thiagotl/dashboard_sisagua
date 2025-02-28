@@ -4,9 +4,10 @@ username: thiagotavareslopes
 account: thiagotavareslopes
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 14031745
-bundleId: 9819687
+appId: 14083570
+bundleId: 9872321
 url: https://thiagotavareslopes.shinyapps.io/dashboard/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: desktop.ini
