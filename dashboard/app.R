@@ -34,25 +34,16 @@ ui <- fluidPage(
     mainPanel(
       h3("Tabela Completa"),
       tableOutput("tabela_freq"),
-      verbatimTextOutput("chi_square")
+      verbatimTextOutput("chi_square_completa"),
+      h3("Tabela Apenas Consistentes"),
+      tableOutput("tabela_consistentes"),
+      verbatimTextOutput("chi_square_consistentes")
     )
   )
 )
 
 # Server
 server <- function(input, output) {
-  output$tabela_freq <- renderTable({
-    cnae_col <- input$cnae_var
-    if (!is.null(cnae_col) && cnae_col %in% names(dados)) {
-      tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
-      proporcoes <- prop.table(tabela, margin = 1)
-      tabela_final <- cbind(as.data.frame.matrix(tabela), Proporção = round(proporcoes[, 2], 2))
-      colnames(tabela_final) <- c("sem detecção", "com detecção", "Proporção")
-      rownames(tabela_final) <- c("sem empresas no CNAE", "com empresas no CNAE")
-      tabela_final
-    }
-  }, rownames = TRUE)
-  
   output$descricao_geral <- renderText({
     cnae_col <- as.character(input$cnae_var)
     descricao <- descricoes %>% filter(trimws(cnae) == trimws(cnae_col)) %>% pull(denominacao_geral)
@@ -73,27 +64,67 @@ server <- function(input, output) {
     }
   })
   
-  output$chi_square <- renderPrint({
+  output$tabela_freq <- renderTable({
     cnae_col <- input$cnae_var
     if (!is.null(cnae_col) && cnae_col %in% names(dados)) {
       tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
-      dimnames(tabela) <- list(
-        "CNAE" = c("sem empresas no CNAE", "com empresas no CNAE"),
-        "Detecção" = c("sem detecção", "com detecção")
-      )
+      proporcoes <- prop.table(tabela, margin = 1)
+      tabela_final <- cbind(as.data.frame.matrix(tabela), Proporção = round(proporcoes[, 2], 2))
+      colnames(tabela_final) <- c("sem detecção", "com detecção", "Proporção")
+      rownames(tabela_final) <- c("sem empresas no CNAE", "com empresas no CNAE")
+      tabela_final
+    }
+  }, rownames = TRUE)
+  
+  output$chi_square_completa <- renderPrint({
+    cnae_col <- input$cnae_var
+    if (!is.null(cnae_col) && cnae_col %in% names(dados)) {
+      tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
       resultado <- chisq.test(tabela)
       
       if (resultado$p.value < 0.05) {
-        cat("Pelo teste qui-quadrado de independência, com nível de significância de 5%,\n",
+        cat("Pelo teste qui-quadrado de independência (Tabela Completa), com nível de significância de 5%,\n",
             "pode-se concluir que **existe associação** entre a presença de acrilamida na água e, \n", 
             "a existência de empresas com o CNAE selecionado. \n")
       } else {
-        cat("Pelo teste qui-quadrado de independência, com nível de significância de 5%, \n",
+        cat("Pelo teste qui-quadrado de independência (Tabela Completa), com nível de significância de 5%, \n",
             "pode-se concluir que **não existe associação** entre a presença de acrilamida na água e,\n",
             "a existência de empresas com o CNAE selecionado.\n")
       }
     }
   })
+  
+  output$chi_square_consistentes <- renderPrint({
+    cnae_col <- input$cnae_var
+    if (!is.null(cnae_col) && cnae_col %in% names(dados)) {
+      dados_consistentes <- dados %>% filter(consistente == 1)
+      tabela <- table(dados_consistentes$deteccao, dados_consistentes[[paste0("num_empresa_", cnae_col)]])
+      resultado <- chisq.test(tabela)
+      
+      if (resultado$p.value < 0.05) {
+        cat("Pelo teste qui-quadrado de independência (Tabela Apenas Consistentes), com nível de significância de 5%,\n",
+            "pode-se concluir que **existe associação** entre a presença de acrilamida na água e, \n", 
+            "a existência de empresas com o CNAE selecionado. \n")
+      } else {
+        cat("Pelo teste qui-quadrado de independência (Tabela Apenas Consistentes), com nível de significância de 5%, \n",
+            "pode-se concluir que **não existe associação** entre a presença de acrilamida na água e,\n",
+            "a existência de empresas com o CNAE selecionado.\n")
+      }
+    }
+  })
+  
+  output$tabela_consistentes <- renderTable({
+    cnae_col <- input$cnae_var
+    if (!is.null(cnae_col) && cnae_col %in% names(dados)) {
+      dados_consistentes <- dados %>% filter(consistente == 1)
+      tabela <- table(dados_consistentes$deteccao, dados_consistentes[[paste0("num_empresa_", cnae_col)]])
+      proporcoes <- prop.table(tabela, margin = 1)
+      tabela_final <- cbind(as.data.frame.matrix(tabela), Proporção = round(proporcoes[, 2], 2))
+      colnames(tabela_final) <- c("sem detecção", "com detecção", "Proporção")
+      rownames(tabela_final) <- c("sem empresas no CNAE", "com empresas no CNAE")
+      tabela_final
+    }
+  }, rownames = TRUE)
 }
 
 # Rodar app
