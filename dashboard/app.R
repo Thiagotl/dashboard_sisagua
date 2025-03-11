@@ -20,6 +20,7 @@ descricoes <- read.csv("descri.csv", sep = ",", stringsAsFactors = FALSE)
 colnames(descricoes) <- tolower(trimws(colnames(descricoes)))
 descricoes <- descricoes |> mutate(cnae = trimws(as.character(descricoes$cnae)))
 
+
 # Ajusta nomes das colunas de 'dados'
 colnames(dados) <- trimws(colnames(dados))  
 dados$Total_Detectados <- as.numeric(dados$Total_Detectados)
@@ -75,7 +76,7 @@ ui <- fluidPage(
 server <- function(input, output) {
   # 3.0) Informações fixas
   output$info_fixa <- renderUI({
-    n_municipios <- length(unique(dados$municipio))
+    n_municipios <- length((dados$municipio))
     n_consistentes <- sum(dados$consistente == 1, na.rm = TRUE)
     n_inconsistentes <- sum(dados$consistente == 0, na.rm = TRUE)
     
@@ -118,7 +119,7 @@ server <- function(input, output) {
   output$tabela_freq <- renderTable({
     cnae_col <- input$cnae_var
     if (!is.null(cnae_col) && cnae_col %in% names(dados)) {
-      tabela <- table(dados$deteccao, dados[[paste0("num_empresa_", cnae_col)]])
+      tabela <- table( dados[[paste0("num_empresa_", cnae_col)]], dados$deteccao)
       proporcoes <- prop.table(tabela, margin = 1)
       tabela_final <- cbind(
         as.data.frame.matrix(tabela),
@@ -167,8 +168,7 @@ server <- function(input, output) {
     if (!is.null(cnae_col) && cnae_col %in% names(dados)) {
       dados_consistentes <- dados  |>  filter(consistente == 1)
       
-      tabela <- table(dados_consistentes$deteccao, 
-                      dados_consistentes[[paste0("num_empresa_", cnae_col)]])
+      tabela <- table(dados_consistentes[[paste0("num_empresa_", cnae_col)]], dados_consistentes$deteccao)
       proporcoes <- prop.table(tabela, margin = 1)
       tabela_final <- cbind(
         as.data.frame.matrix(tabela),
